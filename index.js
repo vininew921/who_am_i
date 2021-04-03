@@ -27,58 +27,70 @@ bot.on('ready', () => {
 
 bot.on('message', (msg) => {
   if (msg.author.username != bot.user.username && msg.content.startsWith('!')) {
-    switch (msg.content.split(' ')[0].trim()) {
-      case '!entrar':
-        if (canJoin) {
-          const p = new Player(msg.author.username, msg.author.id);
-          if (!players.includes(p.username)) {
-            players.push(p.username);
-            playerDetails.push(p);
-            msg.reply(`entrou com sucesso.`);
-            playerDetails.forEach((p) => {
-              var user = bot.users.cache.get(p.id);
-              user.send(printPlayers());
-            });
+    if (msg.channel.type != 'dm') {
+      return;
+    } else {
+      switch (msg.content.split(' ')[0].trim()) {
+        case '!entrar':
+          if (canJoin) {
+            const p = new Player(msg.author.username, msg.author.id);
+            if (!players.includes(p.username)) {
+              players.push(p.username);
+              playerDetails.push(p);
+              msg.reply(`entrou com sucesso.`);
+              playerDetails.forEach((p) => {
+                var user = bot.users.cache.get(p.id);
+                user.send(printPlayers());
+              });
+            } else {
+              msg.reply(`Você já está jogando!`);
+            }
           } else {
-            msg.reply(`${msg.author.username} você já está jogando!`);
+            msg.reply(`${msg.author.username} já existe um jogo em progresso.`);
           }
-        } else {
-          msg.reply(`${msg.author.username} já existe um jogo em progresso.`);
-        }
-        break;
+          break;
 
-      case '!ready':
-        ready(msg);
-        break;
+        case '!ready':
+          ready(msg);
+          break;
 
-      case '!start':
-        start(msg);
-        break;
+        case '!start':
+          start(msg);
+          break;
 
-      case '!end':
-        canJoin = true;
-        playerDetails.forEach((p) => {
-          var user = bot.users.cache.get(p.id);
-          user.send('O jogo acabou. Top.');
-        });
-        players = [];
-        playerDetails = [];
-        break;
+        case '!end':
+          canJoin = true;
+          playerDetails.forEach((p) => {
+            var user = bot.users.cache.get(p.id);
+            user.send('O jogo acabou. Top.');
+          });
+          players = [];
+          playerDetails = [];
+          break;
 
-      case '!sugerir':
-        suggest(msg);
-        break;
+        case '!sugerir':
+          suggest(msg);
+          break;
 
-      default:
-        break;
+        default:
+          break;
+      }
     }
   }
 });
 
+function sendMessageToAll(message) {
+  playerDetails.forEach((p) => {
+    var user = bot.users.cache.get(p.id);
+    user.send(message);
+  });
+}
+
 function printPlayers() {
   var message = 'Players: ';
-  players.forEach((p) => {
-    message += p + ' | ';
+  playerDetails.forEach((p) => {
+    var status = p.ready == true ? 'Pronto' : 'Aguardando';
+    message += p.username + ` (${status}) | `;
   });
   return message;
 }
@@ -99,9 +111,11 @@ function start() {
     p.guessName = p.suggestions[r];
     console.log(r);
   });
+
+  sendMessageToAll('O jogo começou! Cada player recebeu o nome das pessoas participantes (menos o próprio, obviamente)');
+
   playerDetails.forEach((p) => {
     var user = bot.users.cache.get(p.id);
-    user.send('O jogo começou! Cada player recebeu o nome das pessoas participantes (menos o próprio, obviamente)');
     user.send(printPlayersWithDetails(p.username));
   });
   canJoin = false;
@@ -113,6 +127,9 @@ function ready(msg) {
   });
   readyPlayer.ready = true;
   var everyoneReady = true;
+
+  sendMessageToAll(printPlayers());
+
   playerDetails.forEach((p) => {
     if (!p.ready) {
       everyoneReady = false;
