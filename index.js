@@ -37,7 +37,8 @@ bot.on('message', (msg) => {
             if (!players.includes(p.username)) {
               players.push(p.username);
               playerDetails.push(p);
-              msg.reply(`entrou com sucesso.`);
+              console.log(`Player ${p.username} joined`);
+              msg.reply(`Você entrou com sucesso.`);
               playerDetails.forEach((p) => {
                 var user = bot.users.cache.get(p.id);
                 user.send(printPlayers());
@@ -60,10 +61,8 @@ bot.on('message', (msg) => {
 
         case '!end':
           canJoin = true;
-          playerDetails.forEach((p) => {
-            var user = bot.users.cache.get(p.id);
-            user.send('O jogo acabou. Top.');
-          });
+          sendMessageToAll('O jogo acabou. Eba.');
+          sendMessageToAll(printPlayersWithDetails(''));
           players = [];
           playerDetails = [];
           break;
@@ -152,6 +151,7 @@ function suggest(msg) {
 
     suggestedPlayer.suggestions.push(suggestion);
     msg.reply('Sugestão adicionada com sucesso.');
+    console.log(`Suggestion from ${msg.author.username} received`);
   } catch (error) {
     msg.reply(`Error, favor reportar ao vinicius: ${error}`);
   }
