@@ -146,7 +146,7 @@ function suggest(msg) {
     var suggestion = msg.content.split('-')[2].trim();
 
     var suggestedPlayer = playerDetails.find((obj) => {
-      return obj.username == p;
+      return obj.username.includes(p);
     });
 
     suggestedPlayer.suggestions.push(suggestion);
